@@ -1,4 +1,4 @@
-#多层感知机
+# 多层感知机
 from tensorflow.examples.tutorials.mnist import input_data
 import tensorflow as tf
 #定义算法公式。
@@ -14,7 +14,7 @@ x = tf.placeholder(tf.float32, [None, in_units])
 keep_prob = tf.placeholder(tf.float32)
 hiddenl = tf.nn.relu(tf.matmul(x, w1) + b1)
 hiddenl_drop = tf.nn.dropout(hiddenl, keep_prob)
-y = tf.nn.softmax(tf.matmul(hiddenl_drop, w2) + b2)
+y = tf.nn.softmax(tf.matmul(hiddenl_drop, w2) + b2, name = 'output')
 y_ = tf.placeholder(tf.float32, [None, 10])
 #定义损失函数，以及优化算法。
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_*tf.log(y), reduction_indices = [1]))
@@ -27,4 +27,29 @@ for i in range(3000):
 #准确率测评。
 correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-print(str(accuracy.eval({x:mnist.test.images, y_:mnist.test.labels, keep_prob:1.0})))
+print(str(accuracy.eval({x:mnist.test.images, y_:mnist.test.labels, keep_prob:1.0})))	
+'''
+#加载模型，并输出测试结果.
+ckpt = tf.train.get_checkpoint_state('/tmp/')
+saver = tf.train.Saver()
+#saver = tf.train.import_meta_graph(ckpt.model_checkpoint_path+'.meta') #加载Saver模型对象(可不加载)。
+saver.restore(sess, ckpt.model_checkpoint_path)
+
+result = sess.run(y, feed_dict = {x:mnist.test.images, y_:mnist.test.labels, keep_prob:1.0})
+res = sess.run(tf.argmax(result, 1))
+for i in res:
+	print(i)
+'''	
+
+#保存模型结果.
+#方法1. 保存*.pb文件，用于Android平台(需要事先把文件手动建立出来，然后才能输入到文件里面).
+#参考文件： http://blog.csdn.net/cxq234843654/article/details/71171293
+output_graph_def = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, output_node_names=['output'])
+with tf.gfile.FastGFile('/model/cxq.pb', mode='wb') as f:
+    f.write(output_graph_def.SerializeToString())
+
+#方法2. 保存model.ckpt文件，用于PC端(需要事先把tmp文件夹手动建立出来，然后才能输入到文件里面).
+#参考文件： https://www.cnblogs.com/hellcat/p/6925757.html
+saver = tf.train.Saver()
+save_path = saver.save(sess, "/tmp/model.ckpt")
+sess.close()
