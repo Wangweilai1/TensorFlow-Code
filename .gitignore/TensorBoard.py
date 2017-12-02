@@ -1,7 +1,7 @@
 #TensorBoard
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-max_steps = 100
+max_steps = 1000
 learning_rate = 0.001
 dropout = 0.9
 data_dir = '/tmp/tensorflow/mnist/input_data/'
@@ -95,3 +95,6 @@ for i in range(max_steps):
 			train_writer.add_summary(summary, i)
 	train_writer.close()
 	test_writer.close()
+	
+	
+#tensorboard --logdir = /tmp/tensorflow/mnist/logs/mnist_with_summaries	
